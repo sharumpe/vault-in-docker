@@ -1,0 +1,36 @@
+version: '3.6'
+
+networks:
+  vault_net:
+
+services:
+  consul-bootstrap:
+    image: consul:latest
+    command: agent -server -bind 0.0.0.0 -client 0.0.0.0 -bootstrap-expect=1
+    ports:
+      - "9300:9300"
+      - "9500:9500"
+      - "9600:9600/udp"
+    networks:
+      - vault_net
+    volumes:
+      - type: bind
+        source: ./etc/consul.server/config
+        target: /consul/config
+      - type: bind
+        source: ./etc/consul.server/data
+        target: /consul/data
+
+  vault:
+    image: vault:latest
+    command: server
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - "9200:8200"
+    networks:
+      - vault_net
+    volumes:
+      - type: bind
+        source: ./etc/vault.server/config
+        target: /vault/config
